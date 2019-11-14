@@ -13,9 +13,12 @@ namespace Trx2Excel.ExcelUtils
     public class ExcelWriter
     {
         private string FileName { get; set; }
-        public ExcelWriter(string fileName)
+        private bool AllInOne { get;set; }
+        private int idxCell = 2;
+        public ExcelWriter(string fileName, bool allinone)
         {
             FileName = fileName;
+            AllInOne = true;
         }
 
         /// <summary>
@@ -60,25 +63,38 @@ namespace Trx2Excel.ExcelUtils
 
         private void AddSheetToExcel(Dictionary<string, List<UnitTestResult>> filteredData, ExcelPackage package, string nameSpace)
         {
-            var sheet = package.Workbook.Worksheets.Add(nameSpace);
-            sheet = CreateHeader(sheet);
-            var i = 2;
+            var sheetName = "Test Result";
+            if(!AllInOne)
+            {
+                sheetName = nameSpace;
+                idxCell = 2;
+            }
+            var sheet = package.Workbook.Worksheets[sheetName];
+            if( sheet == null) 
+            {
+                sheet = package.Workbook.Worksheets.Add(sheetName);
+                sheet = CreateHeader(sheet);
+            }
+            
+            
+
             foreach (var result in filteredData[nameSpace])
             {
-                sheet.Cells[i, 1].Value = result.TestName;
-                sheet.Cells[i, 1].AutoFitColumns();
-                sheet.Cells[i, 2].Value = result.Outcome;
-                sheet.Cells[i, 2].AutoFitColumns();
-                sheet.Cells[i, 3].Value = result.NameSpace;
-                sheet.Cells[i, 3].AutoFitColumns();
-                sheet.Cells[i, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                sheet.Cells[i, 2].Style.Fill.BackgroundColor.SetColor(
+                sheet.Cells[idxCell, 1].Value = result.TestName;
+                sheet.Cells[idxCell, 1].AutoFitColumns();
+                sheet.Cells[idxCell, 2].Value = result.Outcome;
+                sheet.Cells[idxCell, 2].AutoFitColumns();
+                sheet.Cells[idxCell, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                sheet.Cells[idxCell, 2].Style.Fill.BackgroundColor.SetColor(
                     result.Outcome.Equals(TestOutcome.Failed.ToString(), StringComparison.OrdinalIgnoreCase) ?
                     Color.Red :
                     Color.ForestGreen);
-                sheet.Cells[i, 4].Value = result.Message;
-                sheet.Cells[i, 5].Value = result.StrackTrace;
-                i++;
+                
+                sheet.Cells[idxCell, 3].Value = result.NameSpace;
+                sheet.Cells[idxCell, 3].AutoFitColumns();             
+                sheet.Cells[idxCell, 4].Value = result.Message;
+                sheet.Cells[idxCell, 5].Value = result.StrackTrace;
+                idxCell++;
             }
         }
 
